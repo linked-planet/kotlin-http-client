@@ -1,4 +1,4 @@
-name: Gradle Publish
+name: Publish Library
 on:
   push:
     branches:
