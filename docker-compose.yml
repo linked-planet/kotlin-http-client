@@ -1,0 +1,16 @@
+version: '3.1'
+
+services:
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=jira
+
+  jira:
+    image: kadega/jira-insight:8
+    network_mode: host
+    environment:
+      - CATALINA_OPTS=-Xmx3072m -Xms3072m

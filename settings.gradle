@@ -1,0 +1,13 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'kotlin-http-client'
+include 'kotlin-http-client-error'
+include 'kotlin-http-client-api'
+include 'kotlin-http-client-ktor'
+include 'kotlin-http-client-atlas'
+include 'kotlin-http-client-test-base'
