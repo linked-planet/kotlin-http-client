@@ -21,6 +21,8 @@ jobs:
       - name: Publish to GitHub Packages
         run: |
           NEW_VERSION=$(./gradlew cV | grep "Project version" | cut -d ":" -f2 | xargs | awk '{print $1}') 
+          NEW_OLD_VERSION=$(./gradlew cV | grep "Project version" | cut -d ":" -f2 | xargs) 
+          echo "New old version: ${NEW_OLD_VERSION}"
           echo "New version: ${NEW_VERSION}"
           echo "Github username: ${GITHUB_ACTOR}"
           ./gradlew -Pversion=$NEW_VERSION publish
