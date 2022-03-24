@@ -30,9 +30,10 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 
-test {
-    testLogging {
-        events = ["passed", "skipped", "failed"]
-        showStandardStreams = true
-    }
+task wrapper(type: Wrapper){
+    gradleVersion = '6.7'
+}
+
+task prepareKotlinBuildScriptModel {
+
 }
