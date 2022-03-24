@@ -25,4 +25,4 @@ jobs:
           echo "Github username: ${GITHUB_ACTOR}"
           ./gradlew -Pversion=$NEW_VERSION publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_API_TOKEN }}
