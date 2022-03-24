@@ -24,16 +24,30 @@ subprojects {
     println("Subproject: $project.name")
     println("--- Doing stuff")
 
+    apply plugin: "java-library"
     apply plugin: "maven-publish"
     apply plugin: "pl.allegro.tech.build.axion-release"
     apply plugin: "com.github.ben-manes.versions"
 
     publishing { a ->
+        println("Project: $project.name Component")
+        println(project.components)
         publications {
             "$project.name"(MavenPublication) {
-                //from(components["java"])
+                from(project.components["java"])
             }
         }
+//        publications {
+//            gpr(MavenPublication) {
+//                from(project.components.java)
+//                artifactId = project.name
+//                groupId = parent.group
+//                version = scmVersion.version
+//                pom {
+//                    name = project.name
+//                }
+//            }
+//        }
         repositories {
             maven {
                 name = "GitHubPackages"
