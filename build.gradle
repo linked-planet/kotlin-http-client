@@ -10,7 +10,7 @@ println "Running gradle version: $gradle.gradleVersion"
 allprojects {
     ext.kotlin_version = "1.4.21"
 
-    group "com.linkedplanet"
+    group "com.linked-planet"
     version scmVersion.version
 
     repositories {
@@ -21,9 +21,6 @@ allprojects {
 }
 
 subprojects {
-    println("Subproject: $project.name")
-    println("--- Doing stuff")
-
     apply plugin: "java-library"
     apply plugin: "maven-publish"
     apply plugin: "pl.allegro.tech.build.axion-release"
@@ -37,17 +34,6 @@ subprojects {
                 from(project.components["java"])
             }
         }
-//        publications {
-//            gpr(MavenPublication) {
-//                from(project.components.java)
-//                artifactId = project.name
-//                groupId = parent.group
-//                version = scmVersion.version
-//                pom {
-//                    name = project.name
-//                }
-//            }
-//        }
         repositories {
             maven {
                 name = "GitHubPackages"
