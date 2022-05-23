@@ -1,17 +1,17 @@
 package com.linkedplanet.kotlinhttpclient.ktor
 
-import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
+import arrow.core.*
 import com.google.gson.JsonParser
 import com.linkedplanet.kotlinhttpclient.api.http.BaseHttpClient
 import com.linkedplanet.kotlinhttpclient.error.DomainError
-import io.ktor.client.*
-import io.ktor.client.engine.apache.*
-import io.ktor.client.features.auth.basic.*
-import io.ktor.client.features.json.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.apache.Apache
+import io.ktor.client.features.auth.basic.BasicAuth
+import io.ktor.client.features.json.GsonSerializer
+import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.forms.formData
 import io.ktor.http.*
 
 fun httpClient(username: String, password: String) =
@@ -33,17 +33,23 @@ class KtorHttpClient(
 
     private var httpClient: HttpClient = httpClient(username, password)
 
-    private fun prepareRequest(requestBuilder: HttpRequestBuilder, path: String, params: Map<String, String>, bodyIn: String?, contentType: String?) {
+    private fun prepareRequest(
+        requestBuilder: HttpRequestBuilder,
+        path: String,
+        params: Map<String, String>,
+        bodyIn: String?,
+        contentType: String?
+    ) {
         val parsedContentType = contentType
             ?.let { ContentType.parse(it) }
-            ?:ContentType.Application.Json
+            ?: ContentType.Application.Json
         val parameterString = params
             .takeIf { it.isNotEmpty() }
             ?.let { "?${encodeParams(params)}" }
             ?: ""
         requestBuilder.url("$baseUrl/$path$parameterString")
         requestBuilder.contentType(parsedContentType)
-        if(bodyIn != null){
+        if (bodyIn != null) {
             requestBuilder.body = JsonParser().parse(bodyIn)
         }
     }
@@ -57,7 +63,7 @@ class KtorHttpClient(
         headers: Map<String, String>
     ): Either<DomainError, String> {
         return when (method) {
-            "GET" ->  {
+            "GET" -> {
                 httpClient.get<String> {
                     prepareRequest(this, path, params, bodyIn, contentType)
                 }.right()

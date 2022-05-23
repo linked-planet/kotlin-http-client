@@ -3,10 +3,7 @@ package com.linkedplanet.kotlinhttpclient.atlas
 import arrow.core.Either
 import com.atlassian.applinks.api.ApplicationLink
 import com.atlassian.applinks.api.ApplicationLinkResponseHandler
-import com.atlassian.sal.api.net.Request
-import com.atlassian.sal.api.net.RequestFilePart
-import com.atlassian.sal.api.net.Response
-import com.atlassian.sal.api.net.ResponseException
+import com.atlassian.sal.api.net.*
 import com.linkedplanet.kotlinhttpclient.api.http.BaseHttpClient
 import com.linkedplanet.kotlinhttpclient.error.DomainError
 import com.linkedplanet.kotlinhttpclient.error.ResponseError
@@ -24,7 +21,6 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
         headers: Map<String, String>
     ): Either<DomainError, String> =
         try {
-            //val pathWithParams = if(params != null) "$path?${URLEncoder.encode(params)}" else path
             val atlasMethod = Request.MethodType.valueOf(method)
             val parameters = encodeParams(params)
             val pathWithParams = if (params.isNotEmpty()) "$path?${parameters}" else path
