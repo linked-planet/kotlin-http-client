@@ -36,7 +36,7 @@ suspend fun <T> recursiveRestCall(
         }
         elements.addAll(tmpElements)
         nextPage = tmpElements.size >= maxResults
-        index = index + tmpElements.size
+        index += tmpElements.size
     } while (nextPage && (max == null || index <= max))
     return elements.right()
 }

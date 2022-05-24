@@ -22,7 +22,6 @@ data class DomainErrorObject(
 )
 
 open class DomainError(val error: String, val message: String) {
-
     fun toJson(): String =
         GSON.toJson(DomainErrorObject(error, message))
 }

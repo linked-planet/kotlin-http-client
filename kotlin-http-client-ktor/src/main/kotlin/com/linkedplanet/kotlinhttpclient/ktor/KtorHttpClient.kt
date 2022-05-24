@@ -137,7 +137,6 @@ class KtorHttpClient(
                             append(HttpHeaders.ContentType, mimeType)
                             append(HttpHeaders.ContentDisposition, "filename=$filename")
                         })
-                    //this.append(FormPart("encodedComment", comment))
                 }
             )
         }.right()
