@@ -1,7 +1,5 @@
 name: kotlin-http-client master
 on:
-  push:
-    branches: [ master ]
   release:
     types: [ created ]
 

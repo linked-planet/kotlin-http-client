@@ -1,8 +1,10 @@
 name: kotlin-http-client default
 on:
   push:
-    branches-ignore:
-      - master
+    branches:
+      - '**'
+    tags-ignore:
+      - '*.*'
 
 jobs:
   default:
