@@ -18,8 +18,10 @@ package com.linkedplanet.kotlinhttpclient.ktor
 import arrow.core.*
 import com.google.gson.JsonParser
 import com.linkedplanet.kotlinhttpclient.api.http.BaseHttpClient
-import com.linkedplanet.kotlinhttpclient.error.DomainError
+import com.linkedplanet.kotlinhttpclient.api.http.HttpResponse
+import com.linkedplanet.kotlinhttpclient.error.HttpDomainError
 import io.ktor.client.HttpClient
+import io.ktor.client.call.receive
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.features.auth.basic.BasicAuth
 import io.ktor.client.features.json.GsonSerializer
@@ -31,6 +33,7 @@ import io.ktor.http.*
 
 fun httpClient(username: String, password: String) =
     HttpClient(Apache) {
+        expectSuccess = false
         install(JsonFeature) {
             serializer = GsonSerializer()
         }
@@ -76,33 +79,32 @@ class KtorHttpClient(
         bodyIn: String?,
         contentType: String?,
         headers: Map<String, String>
-    ): Either<DomainError, String> {
-        return when (method) {
+    ): Either<HttpDomainError, HttpResponse<String>> =
+        when (method) {
             "GET" -> {
-                httpClient.get<String> {
+                httpClient.get<io.ktor.client.response.HttpResponse> {
                     prepareRequest(this, path, params, bodyIn, contentType)
-                }.right()
+                }.handleResponse()
             }
             "POST" -> {
-                httpClient.post<String> {
+                httpClient.post<io.ktor.client.response.HttpResponse> {
                     prepareRequest(this, path, params, bodyIn, contentType)
-                }.right()
+                }.handleResponse()
             }
             "PUT" -> {
-                httpClient.put<String> {
+                httpClient.put<io.ktor.client.response.HttpResponse> {
                     prepareRequest(this, path, params, bodyIn, contentType)
-                }.right()
+                }.handleResponse()
             }
             "DELETE" -> {
-                httpClient.delete<String> {
+                httpClient.delete<io.ktor.client.response.HttpResponse> {
                     prepareRequest(this, path, params, bodyIn, contentType)
-                }.right()
+                }.handleResponse()
             }
             else -> {
-                DomainError("HTTP-ERROR", "Method '$method' not available").left()
+                HttpDomainError(500, "HTTP-ERROR", "Method '$method' not available").left()
             }
         }
-    }
 
     override suspend fun executeDownload(
         method: String,
@@ -110,10 +112,10 @@ class KtorHttpClient(
         params: Map<String, String>,
         body: String?,
         contentType: String?
-    ): Either<DomainError, ByteArray> {
-        return httpClient.get<ByteArray> {
+    ): Either<HttpDomainError, HttpResponse<ByteArray>> {
+        return httpClient.get<io.ktor.client.response.HttpResponse> {
             url(url)
-        }.right()
+        }.handleResponse()
     }
 
     override suspend fun executeUpload(
@@ -123,8 +125,8 @@ class KtorHttpClient(
         mimeType: String,
         filename: String,
         byteArray: ByteArray
-    ): Either<DomainError, ByteArray> =
-        httpClient.post<ByteArray> {
+    ): Either<HttpDomainError, HttpResponse<ByteArray>> =
+        httpClient.post<io.ktor.client.response.HttpResponse> {
             url("$baseUrl$url")
             header("Connection", "keep-alive")
             header("Cache-Control", "no-cache")
@@ -139,7 +141,20 @@ class KtorHttpClient(
                         })
                 }
             )
-        }.right()
+        }.handleResponse()
 
 
+    private suspend inline fun <reified T> io.ktor.client.response.HttpResponse.handleResponse(): Either<HttpDomainError, HttpResponse<T>> =
+        if (this.status.value < 400) {
+            HttpResponse<T>(
+                this.status.value,
+                this.receive()
+            ).right()
+        } else {
+            HttpDomainError(
+                this.status.value,
+                "HTTP-ERROR",
+                this.receive()
+            ).left()
+        }
 }

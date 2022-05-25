@@ -20,8 +20,8 @@ import com.atlassian.applinks.api.ApplicationLink
 import com.atlassian.applinks.api.ApplicationLinkResponseHandler
 import com.atlassian.sal.api.net.*
 import com.linkedplanet.kotlinhttpclient.api.http.BaseHttpClient
-import com.linkedplanet.kotlinhttpclient.error.DomainError
-import com.linkedplanet.kotlinhttpclient.error.ResponseError
+import com.linkedplanet.kotlinhttpclient.api.http.HttpResponse
+import com.linkedplanet.kotlinhttpclient.error.HttpDomainError
 import org.apache.http.HttpHeaders
 import org.jetbrains.kotlin.library.impl.javaFile
 
@@ -34,7 +34,7 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
         body: String?,
         contentType: String?,
         headers: Map<String, String>
-    ): Either<DomainError, String> =
+    ): Either<HttpDomainError, HttpResponse<String>> =
         try {
             val atlasMethod = Request.MethodType.valueOf(method)
             val parameters = encodeParams(params)
@@ -47,26 +47,31 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
             } else {
                 requestWithoutBody.setRequestBody(body).setHeader(HttpHeaders.CONTENT_TYPE, contentType)
             }
-            request.execute(object : ApplicationLinkResponseHandler<Either<DomainError, String>> {
-                override fun credentialsRequired(response: Response): Either<DomainError, String>? {
+            request.execute(object : ApplicationLinkResponseHandler<Either<HttpDomainError, HttpResponse<String>>> {
+                override fun credentialsRequired(response: Response): Either<HttpDomainError, HttpResponse<String>>? {
                     return null
                 }
 
-                override fun handle(response: Response): Either<DomainError, String> {
+                override fun handle(response: Response): Either<HttpDomainError, HttpResponse<String>> {
                     return when {
-                        response.isSuccessful -> Either.Right(response.responseBodyAsString)
+                        response.isSuccessful -> Either.Right(
+                            HttpResponse(
+                                response.statusCode,
+                                response.responseBodyAsString
+                            )
+                        )
                         else -> {
                             val errorWithStatusCode = """Call to $path failed with 
                             status [${response.statusCode}]
                             statusText [${response.statusText}]
                             body [${response.responseBodyAsString}]"""
-                            return Either.Left(ResponseError(errorWithStatusCode))
+                            return Either.Left(HttpDomainError(response.statusCode, "HTTP ERROR", errorWithStatusCode))
                         }
                     }
                 }
             })
         } catch (e: ResponseException) {
-            Either.Left(DomainError("Jira/Insight hat ein internes Problem festgestellt", ""))
+            Either.Left(HttpDomainError(-1, "Jira/Insight hat ein internes Problem festgestellt", ""))
         }
 
     override suspend fun executeDownload(
@@ -75,7 +80,7 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
         params: Map<String, String>,
         body: String?,
         contentType: String?
-    ): Either<DomainError, ByteArray> =
+    ): Either<HttpDomainError, HttpResponse<ByteArray>> =
         try {
             val atlasMethod = Request.MethodType.valueOf(method)
             val parameters = encodeParams(params)
@@ -88,26 +93,31 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
             } else {
                 requestWithoutBody.setRequestBody(body).setHeader(HttpHeaders.CONTENT_TYPE, contentType)
             }
-            request.execute(object : ApplicationLinkResponseHandler<Either<DomainError, ByteArray>> {
-                override fun credentialsRequired(response: Response): Either<DomainError, ByteArray>? {
+            request.execute(object : ApplicationLinkResponseHandler<Either<HttpDomainError, HttpResponse<ByteArray>>> {
+                override fun credentialsRequired(response: Response): Either<HttpDomainError, HttpResponse<ByteArray>>? {
                     return null
                 }
 
-                override fun handle(response: Response): Either<DomainError, ByteArray> {
+                override fun handle(response: Response): Either<HttpDomainError, HttpResponse<ByteArray>> {
                     return when {
-                        response.isSuccessful -> Either.Right(response.responseBodyAsStream.readBytes())
+                        response.isSuccessful -> Either.Right(
+                            HttpResponse(
+                                response.statusCode,
+                                response.responseBodyAsStream.readBytes()
+                            )
+                        )
                         else -> {
                             val errorWithStatusCode = """Call to $path failed with 
                             status [${response.statusCode}]
                             statusText [${response.statusText}]
                             body [${response.responseBodyAsString}]"""
-                            return Either.Left(ResponseError(errorWithStatusCode))
+                            return Either.Left(HttpDomainError(response.statusCode, "HTTP ERROR", errorWithStatusCode))
                         }
                     }
                 }
             })
         } catch (e: ResponseException) {
-            Either.Left(DomainError("Jira/Insight hat ein internes Problem festgestellt", ""))
+            Either.Left(HttpDomainError(-1, "Jira/Insight hat ein internes Problem festgestellt", ""))
         }
 
     override suspend fun executeUpload(
@@ -117,7 +127,7 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
         mimeType: String,
         filename: String,
         byteArray: ByteArray
-    ): Either<DomainError, ByteArray> =
+    ): Either<HttpDomainError, HttpResponse<ByteArray>> =
         try {
             val atlasMethod = Request.MethodType.valueOf(method)
             val parameters = encodeParams(params)
@@ -131,25 +141,30 @@ class AtlasHttpClient(private val appLink: ApplicationLink) : BaseHttpClient() {
             val filePart = RequestFilePart(file, "file")
 
             val request = requestWithoutBody.setFiles(listOf(filePart))
-            request.execute(object : ApplicationLinkResponseHandler<Either<DomainError, ByteArray>> {
-                override fun credentialsRequired(response: Response): Either<DomainError, ByteArray>? {
+            request.execute(object : ApplicationLinkResponseHandler<Either<HttpDomainError, HttpResponse<ByteArray>>> {
+                override fun credentialsRequired(response: Response): Either<HttpDomainError, HttpResponse<ByteArray>>? {
                     return null
                 }
 
-                override fun handle(response: Response): Either<DomainError, ByteArray> {
+                override fun handle(response: Response): Either<HttpDomainError, HttpResponse<ByteArray>> {
                     return when {
-                        response.isSuccessful -> Either.Right(byteArray)
+                        response.isSuccessful -> Either.Right(
+                            HttpResponse(
+                                response.statusCode,
+                                byteArray
+                            )
+                        )
                         else -> {
                             val errorWithStatusCode = """Call to $url failed with 
                             status [${response.statusCode}]
                             statusText [${response.statusText}]
                             body [${response.responseBodyAsString}]"""
-                            return Either.Left(ResponseError(errorWithStatusCode))
+                            return Either.Left(HttpDomainError(response.statusCode, "HTTP ERROR", errorWithStatusCode))
                         }
                     }
                 }
             })
         } catch (e: ResponseException) {
-            Either.Left(DomainError("Jira/Insight hat ein internes Problem festgestellt", ""))
+            Either.Left(HttpDomainError(-1, "Jira/Insight hat ein internes Problem festgestellt", ""))
         }
 }

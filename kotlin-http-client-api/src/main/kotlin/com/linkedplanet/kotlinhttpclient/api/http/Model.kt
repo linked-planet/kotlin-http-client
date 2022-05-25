@@ -13,17 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.linkedplanet.kotlinhttpclient.error
+package com.linkedplanet.kotlinhttpclient.api.http
 
-data class DomainErrorObject(
-    val error: String,
-    val message: String
+data class HttpResponse<T>(
+    val statusCode: Int,
+    val body: T
 )
-
-open class DomainError(val error: String, val message: String) {
-    fun toJson(): String =
-        GSON.toJson(DomainErrorObject(error, message))
-}
-
-class HttpDomainError(val statusCode: Int, error: String, message: String) : DomainError(error, message)
-class ResponseError(message: String) : DomainError("Schnittstellen-Fehler", message)
